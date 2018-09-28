@@ -101,6 +101,11 @@ class Player(object):
 
         word = word.lower()
 
+        # select a random section in space separated word
+        # for example, 'debit card' might return 'debit' OR 'card'
+        if len(word.split()) > 1:
+            word = random.choice(word.split())
+
         candidate_word_tuples = self.model.most_similar(word, topn=20)
         for candidate_word, _ in candidate_word_tuples:
             candidate_word = candidate_word.lower()
@@ -131,5 +136,5 @@ class Player(object):
             word
         ))
 
-        pyautogui.typewrite(associated_word, interval=round(random.random() / 2, 2))
+        pyautogui.typewrite(associated_word, interval=round(random.random() / 4, 2))
         pyautogui.press('enter')
