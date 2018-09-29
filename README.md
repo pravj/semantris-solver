@@ -1,6 +1,6 @@
 semantris-solver
 ================
-> Automated solver for Semantris using OpenCV and Word Embeddings
+> Automated solver for [Semantris](https://research.google.com/semantris/) using OpenCV and Word Embeddings
 
 ---
 
@@ -43,10 +43,15 @@ Options:
   --mode=<mode>  Semantris game mode [default: arcade]
 ```
 
-For now it only supports the `arcade` mode of the game. Using the `--verbose` flag will enable the verbose logging configuration.
+- For now it only supports the `arcade` mode of the game.
+- Using the `--verbose` flag will enable the verbose logging configuration.
 ```
 python main.py play --mode=arcade --verbose
 ```
+- It will take 5-10 minutes to load the word embedding model
+- Start the `arcade` version (in `blue` color theme) of the game in a full screen mode
+- Put the cursor in the game input field for the system to enter the suggestions
+- Wait for the ~~magic~~ model to load :tada:
 
 ---
 
