@@ -111,14 +111,12 @@ class Player(object):
             candidate_word = candidate_word.lower()
 
             # Ignore a candidate word if
-            # it contains original word
+            # it shares prefix (4 character) with original word
             # it has more than 10 characters
             # it has been tried earlier for this word
-            # it is the same word in different case
-            if word in candidate_word or \
+            if word[:4] == candidate_word[:4] or \
                     len(candidate_word) > 10 or \
-                    candidate_word in self.associated_word_mapping[word] or \
-                    candidate_word.lower() == word.lower():
+                    candidate_word in self.associated_word_mapping[word]:
                 continue
 
             self.associated_word_mapping[word].append(candidate_word)
