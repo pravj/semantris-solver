@@ -4,6 +4,7 @@ import random
 from collections import defaultdict
 import pyautogui
 from gensim.models.keyedvectors import KeyedVectors
+from utils import utils
 
 
 class Player(object):
@@ -19,10 +20,13 @@ class Player(object):
         verbose: (bool) Verbose logging configuration
     """
 
-    def __init__(self, mode='arcade', initial_wait_time=10, refresh_time=2, verbose=False):
+    def __init__(self, mode='arcade', initial_wait_time=10, refresh_time=0.2, verbose=False):
         self.mode = mode
         self.initial_wait_time = initial_wait_time
-        self.refresh_time = refresh_time
+
+        # relatively higher wait time for blocks mode
+        self.refresh_time = refresh_time if mode == 'arcade' else 2
+
         self.verbose = verbose
 
         # List of words to find associated words for
@@ -46,24 +50,25 @@ class Player(object):
             self.initial_wait_time))
         time.sleep(self.initial_wait_time)
 
-        self.__load_model()
+        # self.__load_model()
 
         if self.mode == 'arcade':
             from players import arcade as game
-        else:
-            # Unreachable code (as of now)
-            self.__log('Only arcade mode is supported as of now')
-            return
+        elif self.mode == 'blocks':
+            from players import blocks as game
 
         while True:
             self.__log('Taking screen shot')
-            screen = pyautogui.screenshot()
+            # suitable region for 1440x900 full screen mode
+            screen_region = (200, 100, 1000, 700) if self.mode == 'blocks' else None
+            screen = utils.get_screen_shot(region=screen_region, wait_time=0)
 
             self.__log('Collecting focus word from screen shot')
             selected_word_candidates = game.get_selected_words(screen)
             for selected_word in selected_word_candidates:
-                associated_word = self.__get_associated_word(selected_word)
-                self.__enter_word(selected_word, associated_word)
+                # associated_word = self.__get_associated_word(selected_word)
+                # self.__enter_word(selected_word, associated_word)
+                print(selected_word)
 
             self.__log('Waiting before next screen shot')
             time.sleep(self.refresh_time)

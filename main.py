@@ -24,9 +24,11 @@ if __name__ == '__main__':
     # arcade mode player
     if arguments['play'] and arguments['--mode'].lower() == 'arcade':
         Player(mode='arcade', verbose=arguments['--verbose']).run()
+    elif arguments['play'] and arguments['--mode'].lower() == 'blocks':
+        Player(mode='blocks', verbose=arguments['--verbose']).run()
     else:
         # TODO: Notification message block utility using # characters
-        print('Only arcade mode is supported as of now')
+        print('Please use either Arcade and Blocks as the game mode')
 
         # exit game
         sys.exit(0)
