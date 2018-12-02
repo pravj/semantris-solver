@@ -19,7 +19,7 @@ class Player(object):
         verbose: (bool) Verbose logging configuration
     """
 
-    def __init__(self, mode='arcade', initial_wait_time=10, refresh_time=2, verbose=False):
+    def __init__(self, mode='arcade', initial_wait_time=10, refresh_time=1, verbose=False):
         self.mode = mode
         self.initial_wait_time = initial_wait_time
         self.refresh_time = refresh_time
@@ -60,10 +60,13 @@ class Player(object):
             screen = pyautogui.screenshot()
 
             self.__log('Collecting focus word from screen shot')
-            selected_word_candidates = game.get_selected_words(screen)
+            selected_word_candidates = list(set(game.get_selected_words(screen)))
+            self.__log(selected_word_candidates)
+            self.__log('Collected {} focus word from screen shot'.format(len(selected_word_candidates)))
             for selected_word in selected_word_candidates:
-                associated_word = self.__get_associated_word(selected_word)
-                self.__enter_word(selected_word, associated_word)
+                if selected_word is not '':
+                    associated_word = self.__get_associated_word(selected_word)
+                    self.__enter_word(selected_word, associated_word)
 
             self.__log('Waiting before next screen shot')
             time.sleep(self.refresh_time)

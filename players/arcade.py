@@ -41,7 +41,7 @@ def get_selected_words(screen):
 
     # find the screen image section where the template is matching
     # with the given threshold range
-    threshold = 0.9
+    threshold = 0.75
     loc = np.where(res_img >= threshold)
     for pt in zip(*loc[::-1]):
         # crop rectangle section around the selected template
