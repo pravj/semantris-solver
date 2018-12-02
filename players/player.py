@@ -57,6 +57,7 @@ class Player(object):
         elif self.mode == 'blocks':
             from players import blocks as game
 
+        num = 0
         while True:
             self.__log('Taking screen shot')
             # suitable region for 1440x900 full screen mode
@@ -64,14 +65,16 @@ class Player(object):
             screen = utils.get_screen_shot(region=screen_region, wait_time=0)
 
             self.__log('Collecting focus word from screen shot')
-            selected_word_candidates = game.get_selected_words(screen)
+            selected_word_candidates = game.get_selected_words(screen, num)
             for selected_word in selected_word_candidates:
                 # associated_word = self.__get_associated_word(selected_word)
                 # self.__enter_word(selected_word, associated_word)
-                print(selected_word)
+                print('selected word', selected_word)
 
             self.__log('Waiting before next screen shot')
             time.sleep(self.refresh_time)
+
+            num += 1
 
     def __log(self, message):
         """

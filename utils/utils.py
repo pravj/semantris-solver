@@ -1,13 +1,16 @@
 import time
+import random
 import numpy as np
 import pyautogui
 import pytesseract
 import cv2
+from sklearn.cluster import KMeans
+from datetime import datetime
 
 
-def bgr_to_hue_value(color):
+def bgr_to_hsv_value(color):
     """
-    Convert a list ([B, G, R]) of BGR color to approximate Hue value
+    Convert a list ([B, G, R]) of BGR color to HSV
     """
 
     c = np.uint8([[color]])
@@ -40,30 +43,120 @@ def get_screen_shot(region=None, wait_time=0):
     return pyautogui.screenshot(region=region)
 
 
-def color_tracked_image(image, bgr_color):
+def find_histogram(clt):
+    """
+    Return an image histogram with k clusters
+    Referred from https://code.likeagirl.io/finding-dominant-colour-on-an-image-b4e075f98097
+
+    :param: clt
+    :return: hist
+    """
+
+    num_labels = np.arange(0, len(np.unique(clt.labels_)) + 1)
+    (hist, _) = np.histogram(clt.labels_, bins=num_labels)
+
+    hist = hist.astype('float')
+    hist /= hist.sum()
+
+    return hist
+
+
+def is_color_gray(r, g, b):
+    """
+    Check if given RGB values represent a gray color or not
+
+    :param r: R
+    :param g: G
+    :param b: B
+    :return: (bool) True if color is gray else False
+    """
+
+    return abs(r-g) <= 10 and abs(g-b) <= 10 and abs(b-r) <= 10
+
+
+def is_blocks_background_color(r, g, b, area):
+    # list of background colors in blocks mode
+    blocks_background_colors_hs = [
+        [132, 8],
+        [128, 5]
+    ]
+
+    # color_hsv = bgr_to_hsv_value([b, g, r]).tolist()
+    """
+    if area > 0.2 or color_hsv[:2] in blocks_background_colors_hs:
+        print(r, g, b, area, color_hsv, area > 0.2, blocks_background_colors_hs, True)
+        return True
+    """
+
+    if area > 0.2 or is_color_gray(r, g, b):
+        print(r, g, b, area, 'gray', area > 0.2, True)
+        return True
+
+    print(r, g, b, area, 'non-gray', area > 0.2, False)
+    return False
+
+
+def get_word_block_colors(image):
+    """
+    Return a list of [r, g, b] colors representing word blocks
+
+    :param image: screen image instance
+    :return: (list) word block color list
+    """
+
+    block_colors = []
+
+    # cut screen into half (horizontal)
+    frame = np.array(image)
+    frame = frame[int(frame.shape[0] / 2):]
+
+    # convert and reshape image format
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = frame.reshape((frame.shape[0] * frame.shape[1], 3))
+
+    # Collect 8 major colors in the image using KMeans clustering
+    color_cluster = KMeans(n_clusters=8)
+    color_cluster.fit(frame)
+
+    # histogram representing area proportion for each color
+    hist = find_histogram(color_cluster)
+
+    # filter out persistent colors from game background
+    for i, rgb in enumerate(color_cluster.cluster_centers_):
+        if not is_blocks_background_color(*rgb, hist[i]):
+            block_colors.append(rgb)
+
+    return block_colors
+
+
+def color_tracked_image(image):
     """
     Return the color tracked version of a given image
 
     :param image: parent image
-    :param bgr_color: (list) color values in BGR space
     :return:
     """
+
+    # list of [r,b,b] colors representing word blocks
+    block_colors = get_word_block_colors(image)
 
     frame = np.array(image)
 
     # Convert RGB to HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
 
-    # define range of a color to track (blue) in HSV
-    # lower_color_range = np.array([90,50,50])
-    # upper_color_range = np.array([110,255,255])
+    # index of block color to track (random among all 4)
+    block_color_index = random.randint(0, 3)
+    print(block_colors, len(block_colors), '-' * 10)
+    print('-' * 10, block_colors[block_color_index])
 
     # get approximate hue value for the given color
-    hue_value = bgr_to_hue_value(bgr_color)[0]
+    block_color_hue = bgr_to_hsv_value(block_colors[block_color_index][::-1])[0]
 
-    # define range of a color to track (green) in HSV
-    lower_color_range = np.array([hue_value - 10, 50, 50])
-    upper_color_range = np.array([hue_value + 10, 255, 255])
+    # # define range of a color to track using hue value
+    lower_color_range = np.array([block_color_hue - 10, 50, 50])
+    upper_color_range = np.array([block_color_hue + 10, 255, 255])
 
     # threshold the HSV image to get only blue colors
     mask_color_range = cv2.inRange(hsv, lower_color_range, upper_color_range)
@@ -72,7 +165,7 @@ def color_tracked_image(image, bgr_color):
     return cv2.bitwise_and(frame, frame, mask=mask_color_range)
 
 
-def get_maximum_area_contour(image):
+def get_maximum_area_contour(image, num):
     """
     Convert color specific image to image with maximum block contour
 
@@ -97,6 +190,10 @@ def get_maximum_area_contour(image):
         cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE
     )
+
+    print('total contours', len(contours))
+
+    cv2.imwrite('gray-{}.png'.format(num), image_gray)
 
     # finding contour with maximum area
     max_area_contour_index = 0
@@ -130,4 +227,5 @@ def get_maximum_area_contour(image):
     )
 
     max_area_contour_image_bw_inverted = cv2.bitwise_not(max_area_contour_image_bw)
+    cv2.imwrite('final-{}.png'.format(num), max_area_contour_image_bw_inverted)
     return max_area_contour_image_bw_inverted - cv2.bitwise_not(mask_contour)
