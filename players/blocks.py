@@ -25,4 +25,5 @@ def get_selected_words(screen, num):
         num
     )
 
-    return [utils.get_image_string(max_area_contour_image)]
+    # return [utils.get_image_string(max_area_contour_image)] if max_area_contour_image is not None else None
+    return [''] if max_area_contour_image is None else [utils.get_image_string(max_area_contour_image)]
