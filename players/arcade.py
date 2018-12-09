@@ -14,7 +14,7 @@ template_img = cv2.imread(template_path, 0)
 w, h = template_img.shape[::-1]
 
 
-def get_selected_words(screen):
+def get_selected_words(screen, num):
     """
     Return a list of words highlighted on the screen
     based on the light blue theme color of the game
@@ -27,12 +27,7 @@ def get_selected_words(screen):
     """
     selected_words = []
 
-    # convert RGB screen image to BGR
-    screen_img_rgb = cv2.cvtColor(np.array(screen), cv2.COLOR_RGB2BGR)
-
-    # converting the screen to grayscale with a threshold for blue channel
-    screen_img_gray = screen_img_rgb[:, :, 0]
-    screen_img_gray = (screen_img_gray > 200) * screen_img_gray
+    screen_img_gray = cv2.cvtColor(np.array(screen), cv2.COLOR_RGB2GRAY)
 
     # apply opencv template matching
     res_img = cv2.matchTemplate(

@@ -50,7 +50,7 @@ class Player(object):
             self.initial_wait_time))
         time.sleep(self.initial_wait_time)
 
-        # self.__load_model()
+        self.__load_model()
 
         if self.mode == 'arcade':
             from players import arcade as game
@@ -65,12 +65,23 @@ class Player(object):
             screen = utils.get_screen_shot(region=screen_region, wait_time=0)
 
             self.__log('Collecting focus word from screen shot')
-            selected_word_candidates = list(set(game.get_selected_words(screen)))
+            selected_word_candidates = list(set(game.get_selected_words(screen, num)))
             self.__log(selected_word_candidates)
             self.__log('Collected {} focus word from screen shot'.format(len(selected_word_candidates)))
             for selected_word in selected_word_candidates:
                 if selected_word is not '':
-                    associated_word = self.__get_associated_word(selected_word)
+                    """
+                    Enter the same word if there is no similar words available
+
+                    It can happen because of the following known reasons:
+                    - Error in focus word detection (OCR)
+                    """
+                    try:
+                        associated_word = self.__get_associated_word(selected_word)
+                    except KeyError:
+                        self.__log('Entering same word {} as there is no similar word for it'.format(selected_word))
+                        associated_word = selected_word
+
                     self.__enter_word(selected_word, associated_word)
 
                 print('selected word', selected_word)

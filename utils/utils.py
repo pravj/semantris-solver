@@ -193,6 +193,11 @@ def get_maximum_area_contour(image, num):
 
     print('total contours', len(contours))
 
+    # No proper contours found
+    if len(contours) == 0:
+        print('No proper contour found')
+        return None
+
     cv2.imwrite('gray-{}.png'.format(num), image_gray)
 
     # finding contour with maximum area
